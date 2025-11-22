@@ -1,6 +1,6 @@
 import pandas as pd
 import sqlite3
-from google import genai  # <-- FIX 1: Correct import
+from google import genai 
 import os
 import re
 from datetime import datetime

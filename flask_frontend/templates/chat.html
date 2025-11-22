@@ -1,0 +1,138 @@
+<!-- flask_frontend/templates/chat.html -->
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>SchoolData Chat</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body class="chat-body">
+  <div class="chat-layout">
+
+    <!-- Sidebar -->
+    <aside class="sidebar">
+      <div class="sidebar-header">
+        <div class="avatar-circle">
+          {{ user_name[:1] | upper }}
+        </div>
+        <div>
+          <div class="user-name">{{ user_name }}</div>
+          <div class="user-role">{{ user_role | capitalize }}</div>
+          <div class="user-email">{{ user_email }}</div>
+        </div>
+      </div>
+
+      <div class="sidebar-section">
+        <h3>Tips</h3>
+        <ul class="tips-list">
+          {% if user_role == "teacher" %}
+            <li>Ask: “Show me all students with pending fees.”</li>
+            <li>Ask: “Attendance summary for class 10A.”</li>
+            <li>Ask: “Top 5 students by average marks.”</li>
+          {% else %}
+            <li>Ask: “Show my attendance details.”</li>
+            <li>Ask: “What are my latest marks?”</li>
+            <li>Ask: “Do I have any pending fees?”</li>
+          {% endif %}
+        </ul>
+      </div>
+
+      <div class="sidebar-footer">
+        <a href="{{ url_for('logout') }}" class="btn-secondary">Logout</a>
+      </div>
+    </aside>
+
+    <!-- Main Chat Area -->
+    <main class="chat-main">
+      <header class="chat-header">
+        <h1>SchoolData Assistant</h1>
+        <span class="status-dot"></span><span class="status-text">Online</span>
+      </header>
+
+      <section id="chat-window" class="chat-window">
+        <!-- Messages will be injected here by JS -->
+      </section>
+
+      <div id="typing-indicator" class="typing-indicator hidden">
+        <span class="dot"></span><span class="dot"></span><span class="dot"></span>
+      </div>
+
+      <form id="chat-form" class="chat-input-bar">
+        <textarea id="chat-input" rows="1" placeholder="Ask something about your school data..." required></textarea>
+        <button type="submit" class="btn-primary">Send</button>
+      </form>
+    </main>
+
+  </div>
+
+  <script>
+    const chatForm = document.getElementById("chat-form");
+    const chatInput = document.getElementById("chat-input");
+    const chatWindow = document.getElementById("chat-window");
+    const typingIndicator = document.getElementById("typing-indicator");
+
+    function addMessage(text, sender = "user") {
+      const msg = document.createElement("div");
+      msg.classList.add("chat-message", sender === "user" ? "from-user" : "from-bot");
+
+      const bubble = document.createElement("div");
+      bubble.classList.add("bubble");
+      bubble.textContent = text;
+      msg.appendChild(bubble);
+
+      chatWindow.appendChild(msg);
+      chatWindow.scrollTop = chatWindow.scrollHeight;
+    }
+
+    async function sendMessage(message) {
+      typingIndicator.classList.remove("hidden");
+
+      try {
+        const resp = await fetch("/api/chat", {
+          method: "POST",
+          headers: {"Content-Type": "application/json"},
+          body: JSON.stringify({ message }),
+        });
+
+        const data = await resp.json();
+        typingIndicator.classList.add("hidden");
+
+        if (!resp.ok || data.error) {
+          addMessage(data.error || "Something went wrong.", "bot");
+          return;
+        }
+
+        // Show AI summary as chat message
+        if (data.summary) {
+          addMessage(data.summary, "bot");
+        } else {
+          addMessage("I got your request and processed it.", "bot");
+        }
+
+        // (Optional) You can also log or inspect data.sql and data.results in console
+        console.log("SQL used:", data.sql);
+        console.log("Results:", data.results);
+
+      } catch (err) {
+        typingIndicator.classList.add("hidden");
+        addMessage("Network error while contacting backend.", "bot");
+      }
+    }
+
+    chatForm.addEventListener("submit", (e) => {
+      e.preventDefault();
+      const text = chatInput.value.trim();
+      if (!text) return;
+
+      addMessage(text, "user");
+      chatInput.value = "";
+      sendMessage(text);
+    });
+
+    // Welcome message
+    window.addEventListener("load", () => {
+      addMessage("Hi! 👋 I'm your SchoolData Assistant. Ask me about attendance, marks, fees, hostel info, and more!", "bot");
+    });
+  </script>
+</body>
+</html>
