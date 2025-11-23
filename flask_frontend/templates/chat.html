@@ -22,30 +22,29 @@
         </div>
       </div>
 
-      <div class="sidebar-section">
-        <h3>Tips</h3>
-        <ul class="tips-list">
-          {% if user_role == "teacher" %}
-            <li>Ask: “Show me all students with pending fees.”</li>
-            <li>Ask: “Attendance summary for class 10A.”</li>
-            <li>Ask: “Top 5 students by average marks.”</li>
-          {% else %}
-            <li>Ask: “Show my attendance details.”</li>
-            <li>Ask: “What are my latest marks?”</li>
-            <li>Ask: “Do I have any pending fees?”</li>
-          {% endif %}
-        </ul>
-      </div>
+    <!-- LOGO SECTION (replaces the old Tips section) -->
+    <div class="sidebar-section logo-block">
+        <img src="{{ url_for('static', filename='logo.png') }}"
+            alt="School Logo"
+            class="school-logo">
 
-      <div class="sidebar-footer">
-        <a href="{{ url_for('logout') }}" class="btn-secondary">Logout</a>
-      </div>
+        <div class="school-name">
+            ABCD International School
+        </div>
+    </div>
+
+
+
+    <div class="sidebar-footer">
+        <a href="{{ url_for('logout') }}" class="btn-secondary logout-btn">Logout</a>
+    </div>
+
     </aside>
 
     <!-- Main Chat Area -->
     <main class="chat-main">
       <header class="chat-header">
-        <h1>SchoolData Assistant</h1>
+        <h1>School Data Assistant</h1>
         <span class="status-dot"></span><span class="status-text">Online</span>
       </header>
 
