@@ -185,7 +185,7 @@ class ChatSQLHelper:
             prompt = f"""
             You are a helpful School Data Assistant.
             User said: "{nl_query}"
-            Reply politely and briefly. Tell them you can help with Marks, Attendance, and Fees.
+            Reply politely and briefly. Tell them you can help with Marks, Attendance, contact details, medical history and Fees.
             """
         else:
             if not rows and "ERROR" not in str(rows):
