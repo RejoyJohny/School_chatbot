@@ -1,18 +1,26 @@
-📚 SchoolData Chatbot – README
-🚀 Overview
+Absolutely — here is a **clean GitHub README format** with **clear titles, subtitles, bullet points, and perfect Markdown structure**.
+You can paste this directly into GitHub and everything will render beautifully. 🚀🔥
 
-SchoolData Chatbot is an AI-powered system that allows students and teachers to query school data (attendance, marks, fees, transport, medical info, etc.) using natural language.
-It uses:
+---
 
-FastAPI (Backend + AI + SQL engine)
+# 📚 **SchoolData Chatbot**
 
-Flask (Frontend UI)
+An AI-powered system that allows **students and teachers** to query school information using **natural language**.
 
-MySQL (Hostinger server)
+---
 
-Gemini API (AI → SQL + Chat responses)
+## 🧩 **Tech Stack**
 
-📁 Project Structure
+* **FastAPI** – Backend + AI + SQL Engine
+* **Flask** – Frontend UI
+* **MySQL (Hostinger)** – Remote database
+* **Gemini API** – Converts natural language → SQL
+
+---
+
+# 📁 **Project Structure**
+
+```
 /backend
     main.py
     .env
@@ -22,28 +30,47 @@ Gemini API (AI → SQL + Chat responses)
     app.py
     templates/
     static/
+```
 
-⚙️ Requirements
-Install Python packages:
+---
 
-Backend:
+# ⚙️ **Requirements**
 
+## **Backend Packages**
+
+* fastapi
+* uvicorn
+* python-dotenv
+* mysql-connector-python
+* passlib[bcrypt]
+* python-jose
+* google-genai
+
+Install:
+
+```bash
 pip install fastapi uvicorn python-dotenv mysql-connector-python passlib[bcrypt] python-jose google-genai
+```
 
+## **Frontend Packages**
 
-Frontend:
+* flask
+* requests
+* python-dotenv
 
+Install:
+
+```bash
 pip install flask requests python-dotenv
+```
 
-🖥️ 1. Setup Environment Variables
+---
 
-Create a file:
+# 🖥️ **1. Environment Setup**
 
-backend/.env
+## **Create `.env` file inside `/backend`**
 
-
-Add:
-
+```
 MYSQL_HOST=srvXXXX.hstgr.io
 MYSQL_USER=your_mysql_username
 MYSQL_PASSWORD=your_mysql_password
@@ -53,153 +80,170 @@ MYSQL_PORT=3306
 GEMINI_API_KEY=YOUR_API_KEY_HERE
 JWT_SECRET=super_secret_key
 ACCESS_TOKEN_EXPIRE_MINUTES=240
+```
 
+### ⭐ Hostinger credentials are found here:
 
-💡 You will find your Hostinger database credentials under:
-hPanel → Databases → MySQL Databases
+* **hPanel → Databases → MySQL Databases**
 
-🗄️ 2. Hostinger Database Configuration
+---
 
-Your database must include these tables (case-sensitive):
+# 🗄️ **2. Hostinger Database Setup**
 
-students
+Your MySQL database must contain the following tables:
 
-teachers
+* students
+* teachers
+* attendance
+* fee_payments
+* academic_marks
+* hostel_transport
+* medical_info
+* student_details
 
-attendance
+### ⚠️ Important
 
-fee_payments
+Each table must include:
 
-academic_marks
+* `student_id` **or**
+* `id`
 
-hostel_transport
+This ensures AI-generated SQL queries work correctly.
 
-medical_info
+---
 
-student_details
+# 🚀 **3. Run Backend (FastAPI)**
 
-Each table must contain student_id or id so filtering works.
+Inside `/backend`:
 
-🏃‍♂️ 3. Running the Backend (FastAPI)
-
-Open terminal inside /backend:
-
+```bash
 cd backend
 uvicorn main:app --reload
+```
 
+### Backend URL
 
-Backend starts at:
-
+```
 http://127.0.0.1:8000
+```
 
+### Swagger Docs
 
-API docs:
-
+```
 http://127.0.0.1:8000/docs
+```
 
-🧪 Test Backend Endpoints
-Login
-POST http://127.0.0.1:8000/login
+---
 
+# 🧪 **Backend Testing**
 
-JSON:
+## **Login API**
 
+POST
+
+```
+/login
+```
+
+Body:
+
+```json
 {
   "email": "teacher1@example.com",
   "password": "your_password"
 }
+```
 
-Test token:
-GET http://127.0.0.1:8000/me
-Authorization: Bearer <token_here>
+## **Check User Info**
 
-Chat:
-POST http://127.0.0.1:8000/chat
+GET
+
+```
+/me
+```
+
+Header:
+
+```
 Authorization: Bearer <token>
+```
+
+## **Chat Query**
+
+POST
+
+```
+/chat
+```
+
+Body:
+
+```json
 {
   "message": "show all students with pending fees"
 }
+```
 
-🖥️ 4. Running the Frontend (Flask)
+---
 
-Open terminal:
+# 🖥️ **4. Run Frontend (Flask)**
 
+Inside `/frontend`:
+
+```bash
 cd frontend
 python app.py
-
+```
 
 Frontend URL:
 
+```
 http://127.0.0.1:5000
+```
 
-🔗 Frontend → Backend Connection
+---
 
-The frontend calls backend using:
+# 🔗 **Frontend → Backend Configuration**
 
+By default, frontend uses:
+
+```
 BACKEND_URL = "http://127.0.0.1:8000"
+```
 
+## **Running backend on another computer (LAN)?**
 
-If backend runs on a different system (LAN):
+Example backend IP:
 
-Example:
-
-Backend PC IP:
-
+```
 192.168.1.12
+```
 
+Update `frontend/.env`:
 
-Update frontend .env:
-
+```
 BACKEND_URL=http://192.168.1.12:8000
+```
 
-🌍 Hostinger → Local System Connection (Important)
+---
 
-Your backend does NOT run on Hostinger, only MySQL is remote.
+# 🌍 **Hostinger & Local Backend Notes**
 
-Your backend always connects like this:
+* Backend does **not** run on Hostinger
+* Only **MySQL** is remote
 
+Backend connects like:
+
+```
 host = "srvXXXX.hstgr.io"
 user = "uXXXX"
 password = "****"
 database = "uXXXX_db"
 port = 3306
+```
 
-🔒 JWT Auth Summary
+---
 
-Users login with /login
+# 🔒 **JWT Authentication Flow**
 
-Receive access_token
-
-All /chat and /me requests must include:
-
-Authorization: Bearer <token>
-
-🧠 AI Model Used
-
-Gemini Flash:
-
-models/gemini-flash-latest
-
-
-Configured in backend:
-
-GENAI_MODEL = "models/gemini-flash-latest"
-
-🧪 Sample Queries for Testing
-show my attendance
-what is my name
-show all students with pending fees
-show my marks in semester 1
-
-
-Students get only their data, teachers get full access.
-
-🛠️ Future Improvements
-
-Dockerized backend & frontend
-
-Multi-language chatbot support
-
-Student-only dashboard
-
-Teacher analytics view
+* Login → Receive `
