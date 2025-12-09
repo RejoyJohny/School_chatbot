@@ -36,8 +36,14 @@
 
 
     <div class="sidebar-footer">
-        <a href="{{ url_for('logout') }}" class="btn-secondary logout-btn">Logout</a>
+      {% if user_role == "teacher" %}
+        <a href="{{ url_for('kpi_page') }}" class="btn-secondary kpi-link">
+          📊 KPI Dashboard
+        </a>
+      {% endif %}
+      <a href="{{ url_for('logout') }}" class="btn-secondary logout-btn">Logout</a>
     </div>
+
 
     </aside>
 

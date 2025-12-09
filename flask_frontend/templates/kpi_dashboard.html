@@ -1,0 +1,193 @@
+{% extends "layout.html" %}
+{% block content %}
+<div class="dashboard-container">
+
+  <h1 class="title">📊 SchoolData KPI Dashboard</h1>
+
+  <!-- KPI CARDS -->
+  <div class="kpi-cards">
+    <div class="kpi-card">
+      <h3>Total Queries</h3>
+      <p id="total_queries">--</p>
+    </div>
+
+    <div class="kpi-card">
+      <h3>Success Rate</h3>
+      <p id="success_rate">--%</p>
+    </div>
+
+    <div class="kpi-card">
+      <h3>Failure Rate</h3>
+      <p id="error_rate">--%</p>
+    </div>
+
+    <div class="kpi-card">
+      <h3>Avg Response Time</h3>
+      <p id="avg_response">-- ms</p>
+    </div>
+  </div>
+
+  <!-- MAIN USAGE TREND -->
+  <div class="chart-section">
+    <h2>📈 Daily Usage Trend</h2>
+    <canvas id="usageChart"></canvas>
+  </div>
+
+  <!-- EXTRA CHARTS ROW -->
+  <div class="chart-row">
+    <div class="chart-card">
+      <h2>👩‍🏫 Teacher Usage</h2>
+      <canvas id="teacherUsageChart"></canvas>
+    </div>
+
+    <div class="chart-card">
+      <h2>👨‍🎓 Student Login Trend</h2>
+      <canvas id="studentLoginChart"></canvas>
+    </div>
+
+    <div class="chart-card">
+      <h2>🖥️ System Uptime</h2>
+      <canvas id="uptimeChart"></canvas>
+    </div>
+  </div>
+
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+fetch("/api/kpi-data")
+  .then(res => res.json())
+  .then(data => {
+      const stats = data.stats || {};
+      const trend = data.usage_trend || [];
+      const teacherUsage = data.teacher_usage || [];
+      const studentTrend = data.student_login_trend || [];
+      const uptimeTrend = data.uptime_trend || [];
+
+      const total = stats.total_queries || 0;
+
+      // ----- KPI CARDS -----
+      document.getElementById("total_queries").innerText = total;
+      document.getElementById("avg_response").innerText =
+          Math.round(stats.avg_response_time || 0) + " ms";
+
+      const successRate = total > 0 ? (stats.success_count / total * 100).toFixed(1) : 0;
+      const errorRate   = total > 0 ? (stats.error_count / total * 100).toFixed(1) : 0;
+
+      document.getElementById("success_rate").innerText = successRate + "%";
+      document.getElementById("error_rate").innerText   = errorRate + "%";
+
+      // ----- DAILY USAGE TREND LINE -----
+      const usageLabels = trend.map(r => {
+        const d = new Date(r.day);
+        return isNaN(d) ? r.day : d.toLocaleDateString("en-IN", {
+          day: "2-digit", month: "short"
+        });
+      });
+      const usageCounts = trend.map(r => parseInt(r.count) || 0);
+
+      const usageCtx = document.getElementById("usageChart").getContext("2d");
+      const usageGradient = usageCtx.createLinearGradient(0, 0, 0, 200);
+      usageGradient.addColorStop(0, "rgba(37, 99, 235, 0.4)");
+      usageGradient.addColorStop(1, "rgba(37, 99, 235, 0)");
+
+      new Chart(usageCtx, {
+        type: "line",
+        data: {
+          labels: usageLabels,
+          datasets: [{
+            data: usageCounts,
+            fill: true,
+            backgroundColor: usageGradient,
+            borderColor: "#2563eb",
+            borderWidth: 2,
+            tension: 0.35,
+            pointRadius: 4,
+            pointBackgroundColor: "#1e40af"
+          }]
+        },
+        options: {
+          plugins: { legend: { display: false } },
+          scales: { y: { beginAtZero: true, ticks: { precision: 0 } } }
+        }
+      });
+
+      // ----- TEACHER USAGE BAR CHART -----
+      const teacherLabels = teacherUsage.map(r => "Teacher " + r.user_id);
+      const teacherCounts = teacherUsage.map(r => parseInt(r.count) || 0);
+
+      const teacherCtx = document.getElementById("teacherUsageChart").getContext("2d");
+      new Chart(teacherCtx, {
+        type: "bar",
+        data: {
+          labels: teacherLabels,
+          datasets: [{
+            data: teacherCounts,
+            backgroundColor: "#fb7185"
+          }]
+        },
+        options: {
+          plugins: { legend: { display: false } },
+          scales: { y: { beginAtZero: true, ticks: { precision: 0 } } }
+        }
+      });
+
+      // ----- STUDENT LOGIN TREND -----
+      const studentLabels = studentTrend.map(r => {
+        const d = new Date(r.day);
+        return isNaN(d) ? r.day : d.toLocaleDateString("en-IN", {
+          day: "2-digit", month: "short"
+        });
+      });
+      const studentCounts = studentTrend.map(r => parseInt(r.count) || 0);
+
+      const studentCtx = document.getElementById("studentLoginChart").getContext("2d");
+      new Chart(studentCtx, {
+        type: "line",
+        data: {
+          labels: studentLabels,
+          datasets: [{
+            data: studentCounts,
+            borderColor: "#22c55e",
+            backgroundColor: "rgba(34, 197, 94, 0.2)",
+            fill: true,
+            tension: 0.3
+          }]
+        },
+        options: {
+          plugins: { legend: { display: false } },
+          scales: { y: { beginAtZero: true, ticks: { precision: 0 } } }
+        }
+      });
+
+      // ----- SYSTEM UPTIME / ACTIVITY -----
+      const uptimeLabels = uptimeTrend.map(r => {
+        const d = new Date(r.day);
+        return isNaN(d) ? r.day : d.toLocaleDateString("en-IN", {
+          day: "2-digit", month: "short"
+        });
+      });
+      const uptimeCounts = uptimeTrend.map(r => parseInt(r.count) || 0);
+
+      const uptimeCtx = document.getElementById("uptimeChart").getContext("2d");
+      new Chart(uptimeCtx, {
+        type: "line",
+        data: {
+          labels: uptimeLabels,
+          datasets: [{
+            data: uptimeCounts,
+            borderColor: "#f97316",
+            backgroundColor: "rgba(249, 115, 22, 0.2)",
+            fill: true,
+            tension: 0.3
+          }]
+        },
+        options: {
+          plugins: { legend: { display: false } },
+          scales: { y: { beginAtZero: true, ticks: { precision: 0 } } }
+        }
+      });
+  });
+</script>
+
+{% endblock %}

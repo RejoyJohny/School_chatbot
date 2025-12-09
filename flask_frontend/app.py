@@ -6,6 +6,26 @@ import os
 import requests
 
 load_dotenv()
+import mysql.connector
+
+
+
+# Load DB config from .env
+MYSQL_HOST = os.environ.get("MYSQL_HOST", "srv1085.hstgr.io")
+MYSQL_USER = os.environ.get("MYSQL_USER", "u477873453_std")
+MYSQL_PASSWORD = os.environ.get("MYSQL_PASSWORD", "lR0$bUKGV*?b")
+MYSQL_DB = os.environ.get("MYSQL_DB", "u477873453_stmic")
+MYSQL_PORT = int(os.environ.get("MYSQL_PORT", 3306))
+
+def get_db_connection():
+    """Create database connection for KPI dashboard."""
+    return mysql.connector.connect(
+        host=MYSQL_HOST,
+        user=MYSQL_USER,
+        password=MYSQL_PASSWORD,
+        database=MYSQL_DB,
+        port=MYSQL_PORT
+    )
 
 
 app = Flask(__name__, static_folder='static', template_folder='templates')
@@ -153,6 +173,89 @@ def api_chat():
 
     chat_data = resp.json()
     return jsonify(chat_data)
+
+
+# 1. THE PAGE ROUTE (Renders the HTML)
+@app.route("/dashboard")
+def kpi_page():
+    if not is_logged_in() or session.get("user_role") != "teacher":
+        return redirect(url_for("chat"))
+    # Make sure your HTML file is named 'kpi_dashboard.html' inside /templates
+    return render_template("kpi_dashboard.html") 
+
+# 2. THE API ROUTE (Returns the Data)
+@app.route("/api/kpi-data")
+def kpi_data():
+    if not is_logged_in() or session.get("user_role") != "teacher":
+        return jsonify({"error": "Unauthorized"}), 403
+
+    conn = get_db_connection()
+    cur = conn.cursor(dictionary=True)
+
+    # ---------- A. OVERALL STATS (chat + login) ----------
+    cur.execute("""
+        SELECT
+            COALESCE(SUM(CASE WHEN event_type LIKE 'chat_%' THEN 1 ELSE 0 END), 0) AS total_queries,
+            COALESCE(SUM(CASE WHEN event_type = 'chat_success' THEN 1 ELSE 0 END), 0) AS success_count,
+            COALESCE(SUM(CASE WHEN event_type IN ('chat_error','chat_ai_error','chat_db_error')
+                              THEN 1 ELSE 0 END), 0) AS error_count,
+            COALESCE(SUM(CASE WHEN event_type = 'login_success' THEN 1 ELSE 0 END), 0) AS login_success,
+            COALESCE(SUM(CASE WHEN event_type = 'login_failed' THEN 1 ELSE 0 END), 0) AS login_failed,
+            COALESCE(AVG(CASE WHEN event_type LIKE 'chat_%' THEN latency_ms END), 0) AS avg_response_time
+        FROM kpi_events;
+    """)
+    stats = cur.fetchone()
+
+    # ---------- B. DAILY USAGE TREND (all chat events) ----------
+    cur.execute("""
+        SELECT DATE(ts) AS day, COUNT(*) AS count
+        FROM kpi_events
+        WHERE event_type LIKE 'chat_%'
+        GROUP BY DATE(ts)
+        ORDER BY day ASC;
+    """)
+    usage_trend = cur.fetchall()
+
+    # ---------- C. TEACHER USAGE (top 5) ----------
+    cur.execute("""
+        SELECT user_id, COUNT(*) AS count
+        FROM kpi_events
+        WHERE role = 'teacher' AND event_type LIKE 'chat_%'
+        GROUP BY user_id
+        ORDER BY count DESC
+        LIMIT 5;
+    """)
+    teacher_usage = cur.fetchall()
+
+    # ---------- D. STUDENT LOGIN TREND ----------
+    cur.execute("""
+        SELECT DATE(ts) AS day, COUNT(*) AS count
+        FROM kpi_events
+        WHERE role = 'student' AND event_type = 'login_success'
+        GROUP BY DATE(ts)
+        ORDER BY day ASC;
+    """)
+    student_login_trend = cur.fetchall()
+
+    # ---------- E. SYSTEM UPTIME / ACTIVITY PER DAY ----------
+    # (proxy: number of events per day – higher = more active/available)
+    cur.execute("""
+        SELECT DATE(ts) AS day, COUNT(*) AS count
+        FROM kpi_events
+        GROUP BY DATE(ts)
+        ORDER BY day ASC;
+    """)
+    uptime_trend = cur.fetchall()
+
+    conn.close()
+
+    return jsonify({
+        "stats": stats,
+        "usage_trend": usage_trend,
+        "teacher_usage": teacher_usage,
+        "student_login_trend": student_login_trend,
+        "uptime_trend": uptime_trend,
+    })
 
 
 if __name__ == "__main__":

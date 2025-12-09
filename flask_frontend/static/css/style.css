@@ -420,3 +420,71 @@ body {
     object-fit: contain;
     filter: drop-shadow(0px 4px 6px rgba(0,0,0,0.15));
 }
+
+.dashboard-container {
+  padding: 2rem;
+}
+
+.title {
+  text-align: center;
+  font-size: 2rem;
+  margin-bottom: 2rem;
+}
+
+.kpi-cards {
+  display: flex;
+  gap: 1rem;
+  justify-content: space-between;
+}
+
+.kpi-card {
+  flex: 1;
+  background: white;
+  padding: 1.5rem;
+  border-radius: 1rem;
+  text-align: center;
+  box-shadow: 0 4px 18px rgba(0,0,0,0.1);
+}
+
+.kpi-card h3 {
+  color: #64748b;
+  margin-bottom: 0.5rem;
+}
+
+.kpi-card p {
+  font-size: 2rem;
+  font-weight: bold;
+  color: #2563eb;
+}
+
+.chart-section {
+  margin-top: 2rem;
+  background: white;
+  padding: 1rem;
+  border-radius: 1rem;
+  box-shadow: 0 4px 18px rgba(0,0,0,0.1);
+}
+.chart-row {
+  display: flex;
+  gap: 1.5rem;
+  margin-top: 1.5rem;
+}
+
+.chart-card {
+  flex: 1;
+  background: #ffffff;
+  border-radius: 1rem;
+  padding: 1rem 1.2rem;
+  box-shadow: 0 8px 22px rgba(15, 23, 42, 0.06);
+  border: 1px solid #e2e8f0;
+}
+.chart-card h2 {
+  font-size: 1rem;
+  margin-bottom: 0.5rem;
+}
+#usageChart {
+  margin-left: auto;
+  margin-right: auto;
+  width: 80% !important;
+  height: 400px !important;  /* Increase this value */
+}
